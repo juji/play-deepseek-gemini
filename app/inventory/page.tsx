@@ -322,7 +322,7 @@ export default function InventoryPage() {
                   </span>
                 </span>
                 <span
-                  className={`flex items-center gap-1.5 text-right font-medium tabular-nums ${lowStock ? 'text-amber-600' : 'text-zinc-500'}`}
+                  className={`flex items-center gap-1.5 text-right font-medium tabular-nums ${lowStock ? 'text-amber-600' : 'text-zinc-700'}`}
                 >
                   {lowStock && <WarningIcon />}
                   {item.quantity}

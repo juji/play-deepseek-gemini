@@ -5,6 +5,7 @@ const products: InventoryItem[] = [
   { name: 'Widget Alpha', sku: 'WDG001', quantity: 42 },
   { name: 'Gadget Beta', sku: 'GDT002', quantity: 7 },
   { name: 'Component Gamma', sku: 'CMP003', quantity: 3 },
+  { name: 'sdfg', sku: 'SDFG004', quantity: 1 },
 ];
 
 export async function GET() {

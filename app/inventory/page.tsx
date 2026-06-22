@@ -121,6 +121,46 @@ function TrashIcon() {
   );
 }
 
+function SunIcon() {
+  return (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" />
+      <line x1="12" y1="21" x2="12" y2="23" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+      <line x1="1" y1="12" x2="3" y2="12" />
+      <line x1="21" y1="12" x2="23" y2="12" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+    </svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
 function PlusIcon() {
   return (
     <svg
@@ -147,6 +187,21 @@ export default function InventoryPage() {
   const [submitting, setSubmitting] = useState(false);
   const [connected, setConnected] = useState(true);
   const [editingSku, setEditingSku] = useState<string | null>(null);
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDark(document.documentElement.classList.contains('dark'));
+  }, []);
+
+  function toggleTheme() {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle('dark', next);
+    try {
+      localStorage.setItem('theme', next ? 'dark' : 'light');
+    } catch {}
+  }
 
   useEffect(() => {
     request
@@ -206,42 +261,57 @@ export default function InventoryPage() {
   return (
     <div className="min-h-screen bg-diagonal">
       <div className="mx-auto max-w-5xl px-6 py-10">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Product Inventory</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+            Product Inventory
+          </h1>
+          <button
+            onClick={toggleTheme}
+            className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title={dark ? 'Light mode' : 'Dark mode'}
+          >
+            {dark ? <SunIcon /> : <MoonIcon />}
+          </button>
+        </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg">
+          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:shadow-black/30">
             <div className="flex items-start justify-between">
-              <p className="text-sm text-slate-500">Total Unique SKUs</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Total Unique SKUs</p>
               <BarcodeIcon />
             </div>
-            <p className="mt-1 text-3xl font-semibold text-zinc-900">{totalSku}</p>
+            <p className="mt-1 text-3xl font-semibold text-zinc-900 dark:text-zinc-100">
+              {totalSku}
+            </p>
           </div>
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg">
+          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:shadow-black/30">
             <div className="flex items-start justify-between">
-              <p className="text-sm text-slate-500">Total Stock Volume</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Total Stock Volume</p>
               <BoxesIcon />
             </div>
-            <p className="mt-1 text-3xl font-semibold text-zinc-900">{totalStock}</p>
+            <p className="mt-1 text-3xl font-semibold text-zinc-900 dark:text-zinc-100">
+              {totalStock}
+            </p>
           </div>
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg">
+          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:shadow-black/30">
             <div className="flex items-start justify-between">
-              <p className="text-sm text-slate-500">System Status</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">System Status</p>
               <SatelliteIcon />
             </div>
             <div className="mt-2 flex items-center gap-2">
               <span
                 className={`inline-block h-2.5 w-2.5 rounded-full ${connected ? 'bg-green-500 shadow-[0_0_6px_#22c55e]' : 'bg-red-400'}`}
               />
-              <span className="text-sm font-medium text-zinc-700">
+              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
                 {connected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-6">
+        <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-zinc-900">
+            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
               {editingSku ? 'Edit Product' : 'Add Product'}
             </h2>
             {editingSku && (
@@ -254,7 +324,7 @@ export default function InventoryPage() {
                   setQuantity('');
                   setErrors({});
                 }}
-                className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors"
+                className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors dark:text-zinc-500 dark:hover:text-zinc-300"
               >
                 Cancel
               </button>
@@ -266,7 +336,7 @@ export default function InventoryPage() {
                 placeholder="Item Name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
               />
               {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
             </div>
@@ -275,7 +345,7 @@ export default function InventoryPage() {
                 placeholder="SKU"
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
               />
               {errors.sku && <p className="mt-1 text-xs text-red-500">{errors.sku}</p>}
             </div>
@@ -285,7 +355,7 @@ export default function InventoryPage() {
                 placeholder="Quantity"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
               />
               {errors.quantity && <p className="mt-1 text-xs text-red-500">{errors.quantity}</p>}
             </div>
@@ -301,8 +371,8 @@ export default function InventoryPage() {
           </form>
         </div>
 
-        <div className="mt-6 rounded-lg border border-zinc-200 bg-white">
-          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm font-medium text-zinc-500">
+        <div className="mt-6 rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm font-medium text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
             <span>Item Name</span>
             <span>SKU</span>
             <span className="text-right">Quantity</span>
@@ -313,23 +383,31 @@ export default function InventoryPage() {
             return (
               <div
                 key={`${item.sku}-${i}`}
-                className={`group grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm last:border-0 items-center ${lowStock ? 'text-amber-700' : ''}`}
+                className={`group grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm last:border-0 items-center dark:border-zinc-800 ${lowStock ? 'text-amber-700 dark:text-amber-400' : ''}`}
               >
-                <span className={lowStock ? 'text-amber-700' : 'text-zinc-900'}>{item.name}</span>
+                <span
+                  className={
+                    lowStock
+                      ? 'text-amber-700 dark:text-amber-400'
+                      : 'text-zinc-900 dark:text-zinc-100'
+                  }
+                >
+                  {item.name}
+                </span>
                 <span>
-                  <span className="inline-block rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 font-mono text-xs text-zinc-500">
+                  <span className="inline-block rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 font-mono text-xs text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
                     {item.sku}
                   </span>
                 </span>
                 <span
-                  className={`flex items-center gap-1.5 text-right font-medium tabular-nums ${lowStock ? 'text-amber-600' : 'text-zinc-700'}`}
+                  className={`flex items-center gap-1.5 text-right font-medium tabular-nums ${lowStock ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-700 dark:text-zinc-300'}`}
                 >
                   {lowStock && <WarningIcon />}
                   {item.quantity}
                 </span>
                 <span className="flex w-16 items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                   <button
-                    className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600"
+                    className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                     title="Edit"
                     onClick={() => {
                       setEditingSku(item.sku);
@@ -342,7 +420,7 @@ export default function InventoryPage() {
                     <EditIcon />
                   </button>
                   <button
-                    className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-500"
+                    className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-500 dark:hover:bg-zinc-800"
                     title="Delete"
                     onClick={async () => {
                       try {
@@ -360,7 +438,9 @@ export default function InventoryPage() {
             );
           })}
           {items.length === 0 && (
-            <p className="px-6 py-8 text-center text-sm text-zinc-400">No products yet.</p>
+            <p className="px-6 py-8 text-center text-sm text-zinc-400 dark:text-zinc-500">
+              No products yet.
+            </p>
           )}
         </div>
       </div>

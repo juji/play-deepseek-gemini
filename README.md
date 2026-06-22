@@ -24,3 +24,5 @@ In the current landscape of AI-assisted development, we wanted to see:
 ---
 
 *This project is a sandbox. It proves that the "gap" between a prompt and a fully functional, high-fidelity feature is shrinking rapidly—provided the architect and the executor are aligned.*
+
+*i'm lazy that way*

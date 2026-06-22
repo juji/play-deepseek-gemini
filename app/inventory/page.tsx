@@ -267,7 +267,7 @@ export default function InventoryPage() {
           </h1>
           <button
             onClick={toggleTheme}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="rounded-lg border border-zinc-200 dark:border-zinc-700 p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             title={dark ? 'Light mode' : 'Dark mode'}
           >
             {dark ? <SunIcon /> : <MoonIcon />}
@@ -275,7 +275,7 @@ export default function InventoryPage() {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:shadow-black/30">
+          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-black/30">
             <div className="flex items-start justify-between">
               <p className="text-sm text-slate-500 dark:text-slate-400">Total Unique SKUs</p>
               <BarcodeIcon />
@@ -284,7 +284,7 @@ export default function InventoryPage() {
               {totalSku}
             </p>
           </div>
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:shadow-black/30">
+          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-black/30">
             <div className="flex items-start justify-between">
               <p className="text-sm text-slate-500 dark:text-slate-400">Total Stock Volume</p>
               <BoxesIcon />
@@ -293,7 +293,7 @@ export default function InventoryPage() {
               {totalStock}
             </p>
           </div>
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:shadow-black/30">
+          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-black/30">
             <div className="flex items-start justify-between">
               <p className="text-sm text-slate-500 dark:text-slate-400">System Status</p>
               <SatelliteIcon />
@@ -309,7 +309,7 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
               {editingSku ? 'Edit Product' : 'Add Product'}
@@ -371,8 +371,8 @@ export default function InventoryPage() {
           </form>
         </div>
 
-        <div className="mt-6 rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
-          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm font-medium text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+        <div className="mt-6 rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm font-medium text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
             <span>Item Name</span>
             <span>SKU</span>
             <span className="text-right">Quantity</span>
@@ -383,7 +383,7 @@ export default function InventoryPage() {
             return (
               <div
                 key={`${item.sku}-${i}`}
-                className={`group grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm last:border-0 items-center dark:border-zinc-800 ${lowStock ? 'text-amber-700 dark:text-amber-400' : ''}`}
+                className={`group grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm last:border-0 items-center dark:border-zinc-700 ${lowStock ? 'text-amber-700 dark:text-amber-400' : ''}`}
               >
                 <span
                   className={

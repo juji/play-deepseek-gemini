@@ -23,3 +23,24 @@ export async function POST(request: Request) {
   products.push(result.output);
   return Response.json(result.output, { status: 201 });
 }
+
+export async function PUT(request: Request) {
+  const body = await request.json();
+  const { originalSku, ...item } = body;
+  const result = safeParse(InventoryItemSchema, item);
+  if (!result.success) {
+    return Response.json({ error: 'Validation failed', issues: result.issues }, { status: 400 });
+  }
+  const idx = products.findIndex((p) => p.sku === originalSku);
+  if (idx === -1) return Response.json({ error: 'Not found' }, { status: 404 });
+  products[idx] = result.output;
+  return Response.json(result.output);
+}
+
+export async function DELETE(request: Request) {
+  const { sku } = await request.json();
+  const idx = products.findIndex((p) => p.sku === sku);
+  if (idx === -1) return Response.json({ error: 'Not found' }, { status: 404 });
+  const removed = products.splice(idx, 1)[0];
+  return Response.json(removed);
+}

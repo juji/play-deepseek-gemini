@@ -146,6 +146,7 @@ export default function InventoryPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [connected, setConnected] = useState(true);
+  const [editingSku, setEditingSku] = useState<string | null>(null);
 
   useEffect(() => {
     request
@@ -182,10 +183,15 @@ export default function InventoryPage() {
 
     setSubmitting(true);
     try {
-      await request.post('/api/products', { body: result.output, schema: InventoryItemSchema });
+      if (editingSku) {
+        await request.put('/api/products', { body: { originalSku: editingSku, ...result.output } });
+      } else {
+        await request.post('/api/products', { body: result.output, schema: InventoryItemSchema });
+      }
       setName('');
       setSku('');
       setQuantity('');
+      setEditingSku(null);
       const updated = await request.get<InventoryItem[]>('/api/products', {
         schema: array(InventoryItemSchema),
       });
@@ -234,7 +240,26 @@ export default function InventoryPage() {
         </div>
 
         <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-6">
-          <h2 className="text-lg font-medium text-zinc-900">Add Product</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium text-zinc-900">
+              {editingSku ? 'Edit Product' : 'Add Product'}
+            </h2>
+            {editingSku && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingSku(null);
+                  setName('');
+                  setSku('');
+                  setQuantity('');
+                  setErrors({});
+                }}
+                className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
           <form onSubmit={handleSubmit} className="mt-4 grid gap-4 sm:grid-cols-4">
             <div>
               <input
@@ -271,7 +296,7 @@ export default function InventoryPage() {
               style={!submitting ? { animation: 'pulse-ring 2s infinite' } : undefined}
             >
               <PlusIcon />
-              {submitting ? 'Adding...' : 'Add Product'}
+              {submitting ? 'Saving...' : editingSku ? 'Update' : 'Add Product'}
             </button>
           </form>
         </div>
@@ -306,12 +331,27 @@ export default function InventoryPage() {
                   <button
                     className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600"
                     title="Edit"
+                    onClick={() => {
+                      setEditingSku(item.sku);
+                      setName(item.name);
+                      setSku(item.sku);
+                      setQuantity(String(item.quantity));
+                      setErrors({});
+                    }}
                   >
                     <EditIcon />
                   </button>
                   <button
                     className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-500"
                     title="Delete"
+                    onClick={async () => {
+                      try {
+                        await request.delete('/api/products', { body: { sku: item.sku } });
+                        setItems((prev) => prev.filter((p) => p.sku !== item.sku));
+                      } catch {
+                        setConnected(false);
+                      }
+                    }}
                   >
                     <TrashIcon />
                   </button>

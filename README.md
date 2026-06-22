@@ -25,6 +25,13 @@ However, the "Gap" persists because our current tooling forces a false choice. W
 * **The "Inference" Burden:** Because the design tool treats the work as a visual drawing rather than a structural model, current AI-driven workflows are forced to "look" at these shapes and guess: *"Is this a button? Is this a link? Is this just a decorative div?"* We are forcing AI to perform **probabilistic inference** on an image, when it should be performing **deterministic realization** on a formal constraint-based model.
 * **The Design-System Silo:** We are trapped in a cycle where design tools act as "walled gardens." By prioritizing proprietary convenience over open, semantic standards, these tools divorce the visual outcome from the technical reality. We have successfully optimized for the *creation of the image*, but in doing so, we have completely abandoned the *definition of the system*. The tool shouldn't just help you draw; it should help you engineer.
 
+### The Two-Tiered Web: Real Software vs. Throwaway Visuals
+
+As AI tools proliferate, the internet is inevitably splitting into two distinct paradigms, revealing why relying on probabilistic "image-to-code" translation is a short-sighted approach:
+
+* **The Disposable Web (Lossy AI Tier):** This is the domain of short-lived landing pages, generic marketing sites, and visual digital flyers. This tier relies heavily on AI guessing engines to instantly flatten screenshots into text. Because long-term maintainability, strict logical edge cases, accessibility, and architectural depth are irrelevant to a throwaway page, lossy translation suffices for speed.
+* **The Infrastructure Web (Deterministic Object Tier):** This is where real software lives—complex dashboards, heavy SaaS architectures, banking applications, and state-driven engines. You cannot run a scalable, security-conscious enterprise on visual hallucinations. When data bindings, complex permissions, state hydration, and multi-layered API dependencies matter, guessing becomes a critical liability.
+
 ### The Path Forward: Defining the "Object Model" of the Web
 
 We do not need to choose between design and development, and we do not need to rely on AI to "guess" the intent behind a drawing. We need to **change the tool**.

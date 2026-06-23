@@ -328,8 +328,7 @@ export default function InventoryPage() {
           </div>
           <button
             onClick={toggleTheme}
-            className="rounded-lg border p-2 transition-colors hover:bg-[#F1F5F9]"
-            style={{ borderColor: '#E2E8F0', color: '#64748B' }}
+            className="theme-btn rounded-lg border p-2 transition-colors"
             title={dark ? 'Light mode' : 'Dark mode'}
           >
             {dark ? <SunIcon /> : <MoonIcon />}
@@ -379,11 +378,8 @@ export default function InventoryPage() {
 
         <div
           ref={formRef}
-          className="mt-6 rounded-xl border bg-white p-6"
-          style={{
-            borderColor: '#E2E8F0',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)',
-          }}
+          className="card-surface mt-6 rounded-xl border p-6"
+          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)' }}
         >
           <div className="flex items-center justify-between">
             <h2 style={{ fontSize: 16, fontWeight: 600, color: '#0F172A' }}>
@@ -449,11 +445,8 @@ export default function InventoryPage() {
         </div>
 
         <div
-          className="mt-6 rounded-xl border bg-white overflow-hidden"
-          style={{
-            borderColor: '#E2E8F0',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)',
-          }}
+          className="card-surface mt-6 rounded-xl border overflow-hidden"
+          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)' }}
         >
           <table className="data-table">
             <thead>
@@ -720,13 +713,27 @@ export default function InventoryPage() {
         [data-theme="dark"] .bg-page {
           background: repeating-linear-gradient(45deg, #0F172A, #0F172A 12px, #131C31 12px, #131C31 13px), linear-gradient(to bottom, #0F172A, #0B1222);
         }
-        [data-theme="dark"] [style*="color: #0F172A"] { color: #F1F5F9 !important; }
-        [data-theme="dark"] h1 { color: #F1F5F9 !important; }
-        [data-theme="dark"] h2 { color: #F1F5F9 !important; }
-        [data-theme="dark"] .rounded-xl.border {
+        [data-theme="dark"] h1, [data-theme="dark"] h2 { color: #F1F5F9 !important; }
+        .card-surface {
+          background: white;
+          border-color: #E2E8F0;
+        }
+        [data-theme="dark"] .card-surface {
           background: #1E293B;
           border-color: #334155;
         }
+
+        .theme-btn {
+          border-color: #E2E8F0;
+          color: #64748B;
+          background: transparent;
+        }
+        .theme-btn:hover { background: #F1F5F9; }
+        [data-theme="dark"] .theme-btn {
+          border-color: #334155;
+          color: #94A3B8;
+        }
+        [data-theme="dark"] .theme-btn:hover { background: #263044; }
         [data-theme="dark"] .dot-pulse { background-color: #10B981 !important; }
       `}</style>
     </div>

@@ -314,13 +314,7 @@ export default function InventoryPage() {
   }
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background:
-          'repeating-linear-gradient(45deg, #F1F5F9, #F1F5F9 12px, #E8EDF2 12px, #E8EDF2 13px), linear-gradient(to bottom, #F8FAFC, #F1F5F9)',
-      }}
-    >
+    <div className="min-h-screen bg-page">
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="flex items-center justify-between">
           <div>
@@ -720,8 +714,11 @@ export default function InventoryPage() {
           box-shadow: 0 4px 14px rgba(79,70,229,0.6);
         }
         [data-theme="dark"] .low-stock-qty { color: #D97706 !important; }
-        [data-theme="dark"] [style*="background: repeating-linear-gradient"] {
-          background: repeating-linear-gradient(45deg, #0F172A, #0F172A 12px, #131C31 12px, #131C31 13px), linear-gradient(to bottom, #0F172A, #0B1222) !important;
+        .bg-page {
+          background: repeating-linear-gradient(45deg, #F1F5F9, #F1F5F9 12px, #E8EDF2 12px, #E8EDF2 13px), linear-gradient(to bottom, #F8FAFC, #F1F5F9);
+        }
+        [data-theme="dark"] .bg-page {
+          background: repeating-linear-gradient(45deg, #0F172A, #0F172A 12px, #131C31 12px, #131C31 13px), linear-gradient(to bottom, #0F172A, #0B1222);
         }
         [data-theme="dark"] [style*="color: #0F172A"] { color: #F1F5F9 !important; }
         [data-theme="dark"] h1 { color: #F1F5F9 !important; }

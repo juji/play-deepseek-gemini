@@ -485,7 +485,6 @@ export default function InventoryPage() {
                       </td>
                       <td
                         className={`data-td text-right font-medium ${lowStock ? 'low-stock-qty' : ''}`}
-                        style={{ color: lowStock ? '#D97706' : '#334155' }}
                       >
                         {lowStock && <WarningTriangle />}
                         {item.quantity}

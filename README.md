@@ -3,8 +3,9 @@
 This project is not a serious production application. It exists as a technical exploration into the limits of **AI-driven development orchestration**.
 
 ### The Concept
-We tested the synergy between two distinct AI roles:
+We tested the synergy between three distinct AI roles:
 * **Gemini (gemini.google.com):** Architect and Prompt Engineer, responsible for defining the system requirements, architectural boundaries, and actionable technical prompts.
+* **Claude (claude.ai):** Prompt Editor, responsible for refining and restructuring the Gemini-generated prompt for clarity, visual polish, and production-grade UI fidelity.
 * **DeepSeek (OpenCode):** Lead Executor, responsible for implementing the Next.js 16 environment and dashboard functionality.
 
 ### The "Lossy Translation" Problem: An Architectural Bottleneck

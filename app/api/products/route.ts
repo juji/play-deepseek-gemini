@@ -2,10 +2,10 @@ import { safeParse } from 'valibot';
 import { InventoryItemSchema, type InventoryItem } from '@/features/inventory/inventorySchema';
 
 const products: InventoryItem[] = [
-  { name: 'Widget Alpha', sku: 'WDG001', quantity: 42 },
-  { name: 'Gadget Beta', sku: 'GDT002', quantity: 7 },
-  { name: 'Component Gamma', sku: 'CMP003', quantity: 3 },
-  { name: 'sdfg', sku: 'SDFG004', quantity: 1 },
+  { itemName: 'Widget Alpha', sku: 'WDG001', quantity: 42 },
+  { itemName: 'Gadget Beta', sku: 'GDT002', quantity: 7 },
+  { itemName: 'Component Gamma', sku: 'CMP003', quantity: 3 },
+  { itemName: 'Hydraulic Valve', sku: 'HYD005', quantity: 15 },
 ];
 
 export async function GET() {

@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { safeParse, array } from 'valibot';
+import { useState, useEffect, useRef } from 'react';
+import { safeParse } from 'valibot';
 import { InventoryItemSchema, type InventoryItem } from '@/features/inventory/inventorySchema';
+import { useInventoryStore } from '@/store/inventoryStore';
 import { request } from '@/lib/request';
 
 function BarcodeIcon() {
   return (
     <svg
-      className="h-5 w-5 text-zinc-400"
+      className="h-5 w-5 text-[#94A3B8]"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -26,10 +27,10 @@ function BarcodeIcon() {
   );
 }
 
-function BoxesIcon() {
+function PackagesIcon() {
   return (
     <svg
-      className="h-5 w-5 text-zinc-400"
+      className="h-5 w-5 text-[#94A3B8]"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -52,7 +53,7 @@ function BoxesIcon() {
 function SatelliteIcon() {
   return (
     <svg
-      className="h-5 w-5 text-zinc-400"
+      className="h-5 w-5 text-[#94A3B8]"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -69,10 +70,12 @@ function SatelliteIcon() {
   );
 }
 
-function WarningIcon() {
+function WarningTriangle() {
   return (
     <svg
-      className="h-4 w-4 text-amber-600 shrink-0"
+      style={{ fontSize: 14, verticalAlign: -1, marginRight: 4 }}
+      width="14"
+      height="14"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -87,7 +90,7 @@ function WarningIcon() {
   );
 }
 
-function EditIcon() {
+function PencilIcon() {
   return (
     <svg
       className="h-4 w-4"
@@ -178,40 +181,62 @@ function PlusIcon() {
   );
 }
 
+function AlertCircleIcon() {
+  return (
+    <svg
+      className="inline-block h-3 w-3"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="8" x2="12" y2="12" />
+      <line x1="12" y1="16" x2="12.01" y2="16" />
+    </svg>
+  );
+}
+
 export default function InventoryPage() {
-  const [items, setItems] = useState<InventoryItem[]>([]);
-  const [name, setName] = useState('');
+  const {
+    items,
+    connected,
+    loading,
+    fetchItems,
+    addItem,
+    removeItem,
+    updateItem,
+    revertItems,
+    setConnected,
+  } = useInventoryStore();
+  const [itemName, setItemName] = useState('');
   const [sku, setSku] = useState('');
   const [quantity, setQuantity] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
-  const [connected, setConnected] = useState(true);
   const [editingSku, setEditingSku] = useState<string | null>(null);
   const [dark, setDark] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDark(document.documentElement.classList.contains('dark'));
+    setDark(document.documentElement.getAttribute('data-theme') === 'dark');
   }, []);
 
   function toggleTheme() {
     const next = !dark;
     setDark(next);
-    document.documentElement.classList.toggle('dark', next);
+    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
     try {
       localStorage.setItem('theme', next ? 'dark' : 'light');
     } catch {}
   }
-
-  useEffect(() => {
-    request
-      .get<InventoryItem[]>('/api/products', { schema: array(InventoryItemSchema) })
-      .then((data) => {
-        setItems(data);
-        setConnected(true);
-      })
-      .catch(() => setConnected(false));
-  }, []);
 
   const totalSku = items.length;
   const totalStock = items.reduce((sum, i) => sum + i.quantity, 0);
@@ -221,7 +246,7 @@ export default function InventoryPage() {
     setErrors({});
 
     const result = safeParse(InventoryItemSchema, {
-      name,
+      itemName,
       sku,
       quantity: quantity ? parseFloat(quantity) : undefined,
     });
@@ -237,37 +262,80 @@ export default function InventoryPage() {
     }
 
     setSubmitting(true);
+    const prevItems = [...items];
+    const newItem = result.output;
+
     try {
       if (editingSku) {
-        await request.put('/api/products', { body: { originalSku: editingSku, ...result.output } });
+        await request.put('/api/products', { body: { originalSku: editingSku, ...newItem } });
+        updateItem(editingSku, newItem);
       } else {
-        await request.post('/api/products', { body: result.output, schema: InventoryItemSchema });
+        addItem(newItem);
+        await request.post('/api/products', { body: newItem });
       }
-      setName('');
+      setItemName('');
       setSku('');
       setQuantity('');
       setEditingSku(null);
-      const updated = await request.get<InventoryItem[]>('/api/products', {
-        schema: array(InventoryItemSchema),
-      });
-      setItems(updated);
     } catch {
+      revertItems(prevItems);
       setConnected(false);
     } finally {
       setSubmitting(false);
     }
   }
 
+  function startEdit(item: InventoryItem) {
+    setEditingSku(item.sku);
+    setItemName(item.itemName);
+    setSku(item.sku);
+    setQuantity(String(item.quantity));
+    setErrors({});
+    formRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function cancelEdit() {
+    setEditingSku(null);
+    setItemName('');
+    setSku('');
+    setQuantity('');
+    setErrors({});
+  }
+
+  async function handleDelete(sku: string) {
+    const prevItems = [...items];
+    removeItem(sku);
+    try {
+      await request.delete('/api/products', { body: { sku } });
+    } catch {
+      revertItems(prevItems);
+      setConnected(false);
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-diagonal">
+    <div
+      className="min-h-screen"
+      style={{
+        background:
+          'repeating-linear-gradient(45deg, #F1F5F9, #F1F5F9 12px, #E8EDF2 12px, #E8EDF2 13px), linear-gradient(to bottom, #F8FAFC, #F1F5F9)',
+      }}
+    >
       <div className="mx-auto max-w-5xl px-6 py-10">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-            Product Inventory
-          </h1>
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight" style={{ color: '#0F172A' }}>
+              Product Inventory
+            </h1>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="inline-block h-[6px] w-[6px] rounded-full bg-[#10B981] dot-pulse" />
+              <span style={{ fontSize: 13, color: '#64748B' }}>Warehouse ops · Live</span>
+            </div>
+          </div>
           <button
             onClick={toggleTheme}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 p-2 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            className="rounded-lg border p-2 transition-colors hover:bg-[#F1F5F9]"
+            style={{ borderColor: '#E2E8F0', color: '#64748B' }}
             title={dark ? 'Light mode' : 'Dark mode'}
           >
             {dark ? <SunIcon /> : <MoonIcon />}
@@ -275,79 +343,95 @@ export default function InventoryPage() {
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-black/30">
+          <div className="card-metric">
             <div className="flex items-start justify-between">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Total Unique SKUs</p>
+              <span className="metric-label">Unique SKUs</span>
               <BarcodeIcon />
             </div>
-            <p className="mt-1 text-3xl font-semibold text-zinc-900 dark:text-zinc-100">
-              {totalSku}
-            </p>
+            <p className="metric-value">{totalSku}</p>
           </div>
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-black/30">
+          <div className="card-metric">
             <div className="flex items-start justify-between">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Total Stock Volume</p>
-              <BoxesIcon />
+              <span className="metric-label">Stock Volume</span>
+              <PackagesIcon />
             </div>
-            <p className="mt-1 text-3xl font-semibold text-zinc-900 dark:text-zinc-100">
-              {totalStock}
-            </p>
+            <p className="metric-value">{totalStock}</p>
           </div>
-          <div className="group rounded-lg border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:shadow-black/30">
+          <div className="card-metric relative">
             <div className="flex items-start justify-between">
-              <p className="text-sm text-slate-500 dark:text-slate-400">System Status</p>
+              <span className="metric-label">System Status</span>
               <SatelliteIcon />
             </div>
-            <div className="mt-2 flex items-center gap-2">
+            <p className="metric-value">{totalSku > 0 ? totalSku : '—'}</p>
+            <div className="flex items-center gap-2 mt-1">
               <span
-                className={`inline-block h-2.5 w-2.5 rounded-full ${connected ? 'bg-green-500 shadow-[0_0_6px_#22c55e]' : 'bg-red-400'}`}
+                className="inline-block h-[6px] w-[6px] rounded-full"
+                style={{ backgroundColor: connected ? '#10B981' : '#EF4444' }}
               />
-              <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  letterSpacing: '0.05em',
+                  textTransform: 'uppercase',
+                  color: '#64748B',
+                }}
+              >
                 {connected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        <div
+          ref={formRef}
+          className="mt-6 rounded-xl border bg-white p-6"
+          style={{
+            borderColor: '#E2E8F0',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)',
+          }}
+        >
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium text-zinc-900 dark:text-zinc-100">
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: '#0F172A' }}>
               {editingSku ? 'Edit Product' : 'Add Product'}
             </h2>
             {editingSku && (
               <button
                 type="button"
-                onClick={() => {
-                  setEditingSku(null);
-                  setName('');
-                  setSku('');
-                  setQuantity('');
-                  setErrors({});
-                }}
-                className="text-sm text-zinc-400 hover:text-zinc-600 transition-colors dark:text-zinc-500 dark:hover:text-zinc-300"
+                onClick={cancelEdit}
+                style={{ fontSize: 13, color: '#64748B' }}
+                className="hover:underline transition-colors"
               >
                 Cancel
               </button>
             )}
           </div>
-          <form onSubmit={handleSubmit} className="mt-4 grid gap-4 sm:grid-cols-4">
+          <form onSubmit={handleSubmit} className="mt-4 grid gap-4 sm:grid-cols-[1fr_1fr_1fr_auto]">
             <div>
               <input
                 placeholder="Item Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                className="input-field"
               />
-              {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+              {errors.itemName && (
+                <p className="error-text">
+                  <AlertCircleIcon /> {errors.itemName}
+                </p>
+              )}
             </div>
             <div>
               <input
                 placeholder="SKU"
                 value={sku}
-                onChange={(e) => setSku(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                onChange={(e) => setSku(e.target.value.toUpperCase())}
+                className="input-field"
               />
-              {errors.sku && <p className="mt-1 text-xs text-red-500">{errors.sku}</p>}
+              {errors.sku && (
+                <p className="error-text">
+                  <AlertCircleIcon /> {errors.sku}
+                </p>
+              )}
             </div>
             <div>
               <input
@@ -355,95 +439,299 @@ export default function InventoryPage() {
                 placeholder="Quantity"
                 value={quantity}
                 onChange={(e) => setQuantity(e.target.value)}
-                className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 transition-all outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500"
+                className="input-field"
               />
-              {errors.quantity && <p className="mt-1 text-xs text-red-500">{errors.quantity}</p>}
+              {errors.quantity && (
+                <p className="error-text">
+                  <AlertCircleIcon /> {errors.quantity}
+                </p>
+              )}
             </div>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-all hover:-translate-y-0.5 hover:bg-blue-500 active:translate-y-0 disabled:opacity-50 disabled:hover:translate-y-0"
-              style={!submitting ? { animation: 'pulse-ring 2s infinite' } : undefined}
-            >
+            <button type="submit" disabled={submitting} className="btn-primary">
               <PlusIcon />
-              {submitting ? 'Saving...' : editingSku ? 'Update' : 'Add Product'}
+              {submitting ? 'Saving...' : editingSku ? 'Save changes' : 'Add Product'}
             </button>
           </form>
         </div>
 
-        <div className="mt-6 rounded-lg border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
-          <div className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm font-medium text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-            <span>Item Name</span>
-            <span>SKU</span>
-            <span className="text-right">Quantity</span>
-            <span className="w-16" />
-          </div>
-          {items.map((item, i) => {
-            const lowStock = item.quantity < 5;
-            return (
-              <div
-                key={`${item.sku}-${i}`}
-                className={`group grid grid-cols-[1fr_1fr_auto_auto] gap-4 border-b border-zinc-100 px-6 py-3 text-sm last:border-0 items-center dark:border-zinc-700 ${lowStock ? 'text-amber-700 dark:text-amber-400' : ''}`}
-              >
-                <span
-                  className={
-                    lowStock
-                      ? 'text-amber-700 dark:text-amber-400'
-                      : 'text-zinc-900 dark:text-zinc-100'
-                  }
-                >
-                  {item.name}
-                </span>
-                <span>
-                  <span className="inline-block rounded border border-zinc-200 bg-zinc-50 px-2 py-0.5 font-mono text-xs text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-400">
-                    {item.sku}
-                  </span>
-                </span>
-                <span
-                  className={`flex items-center gap-1.5 text-right font-medium tabular-nums ${lowStock ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-700 dark:text-zinc-300'}`}
-                >
-                  {lowStock && <WarningIcon />}
-                  {item.quantity}
-                </span>
-                <span className="flex w-16 items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                  <button
-                    className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
-                    title="Edit"
-                    onClick={() => {
-                      setEditingSku(item.sku);
-                      setName(item.name);
-                      setSku(item.sku);
-                      setQuantity(String(item.quantity));
-                      setErrors({});
-                    }}
-                  >
-                    <EditIcon />
-                  </button>
-                  <button
-                    className="rounded p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-red-500 dark:hover:bg-zinc-800"
-                    title="Delete"
-                    onClick={async () => {
-                      try {
-                        await request.delete('/api/products', { body: { sku: item.sku } });
-                        setItems((prev) => prev.filter((p) => p.sku !== item.sku));
-                      } catch {
-                        setConnected(false);
-                      }
-                    }}
-                  >
-                    <TrashIcon />
-                  </button>
-                </span>
-              </div>
-            );
-          })}
-          {items.length === 0 && (
-            <p className="px-6 py-8 text-center text-sm text-zinc-400 dark:text-zinc-500">
-              No products yet.
-            </p>
-          )}
+        <div
+          className="mt-6 rounded-xl border bg-white overflow-hidden"
+          style={{
+            borderColor: '#E2E8F0',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06)',
+          }}
+        >
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th className="data-th">Item Name</th>
+                <th className="data-th">SKU</th>
+                <th className="data-th text-right">Quantity</th>
+                <th className="data-th w-20" />
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={4} className="text-center py-8 text-sm" style={{ color: '#94A3B8' }}>
+                    Loading...
+                  </td>
+                </tr>
+              ) : items.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="text-center py-8 text-sm" style={{ color: '#94A3B8' }}>
+                    No products yet.
+                  </td>
+                </tr>
+              ) : (
+                items.map((item, i) => {
+                  const lowStock = item.quantity <= 3;
+                  return (
+                    <tr
+                      key={item.sku}
+                      className="data-row"
+                      style={{ animationDelay: `${i * 40}ms` }}
+                    >
+                      <td className="data-td">{item.itemName}</td>
+                      <td className="data-td">
+                        <span className="sku-chip">{item.sku}</span>
+                      </td>
+                      <td
+                        className={`data-td text-right font-medium ${lowStock ? 'low-stock-qty' : ''}`}
+                        style={{ color: lowStock ? '#D97706' : '#334155' }}
+                      >
+                        {lowStock && <WarningTriangle />}
+                        {item.quantity}
+                      </td>
+                      <td className="data-td">
+                        <div className="row-actions">
+                          <button
+                            className="btn-icon btn-icon-edit"
+                            title="Edit"
+                            onClick={() => startEdit(item)}
+                          >
+                            <PencilIcon />
+                          </button>
+                          <button
+                            className="btn-icon btn-icon-delete"
+                            title="Delete"
+                            onClick={() => handleDelete(item.sku)}
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
+
+      <style>{`
+        @keyframes dotPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        .dot-pulse { animation: dotPulse 2s ease-in-out infinite; }
+
+        @keyframes rowFadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .data-row { animation: rowFadeIn 200ms ease-out both; }
+
+        .card-metric {
+          border-radius: 12px;
+          border: 1px solid #E2E8F0;
+          background: white;
+          padding: 20px 24px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+          transition: all 150ms ease;
+        }
+        .card-metric:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .metric-label {
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: #64748B;
+        }
+        .metric-value {
+          margin-top: 4px;
+          font-size: 32px;
+          font-weight: 600;
+          font-variant-numeric: tabular-nums;
+          color: #0F172A;
+        }
+
+        .input-field {
+          width: 100%;
+          border-radius: 8px;
+          border: 1px solid #E2E8F0;
+          padding: 8px 12px;
+          font-size: 14px;
+          color: #334155;
+          outline: none;
+          transition: outline 150ms ease;
+          background: white;
+        }
+        .input-field:focus {
+          outline: 2px solid #4F46E5;
+          outline-offset: 2px;
+        }
+        .input-field::placeholder { color: #94A3B8; }
+
+        .error-text {
+          margin-top: 4px;
+          font-size: 12px;
+          color: #DC2626;
+          display: flex;
+          align-items: center;
+          gap: 3px;
+        }
+
+        .btn-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          background: #4F46E5;
+          color: white;
+          border-radius: 8px;
+          padding: 10px 20px;
+          font-weight: 500;
+          font-size: 14px;
+          border: none;
+          cursor: pointer;
+          transition: all 150ms ease;
+          white-space: nowrap;
+        }
+        .btn-primary:hover:not(:disabled) {
+          background: #4338CA;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 14px rgba(79,70,229,0.4);
+        }
+        .btn-primary:active:not(:disabled) { transform: translateY(0); }
+        .btn-primary:disabled { opacity: 0.5; cursor: default; }
+
+        .data-table {
+          width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
+        }
+        .data-th {
+          background: #F8FAFC;
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #94A3B8;
+          padding: 12px 16px;
+          text-align: left;
+          border-bottom: 1px solid #E2E8F0;
+        }
+        .data-th.text-right { text-align: right; }
+        .data-td {
+          padding: 14px 16px;
+          font-size: 14px;
+          color: #334155;
+          border-bottom: 1px solid #F1F5F9;
+        }
+        .data-row:last-child .data-td { border-bottom: none; }
+        .data-row:hover { background: #F8FAFC; }
+
+        .sku-chip {
+          font-family: 'JetBrains Mono', 'Courier New', monospace;
+          font-size: 12px;
+          background: #F8FAFC;
+          border: 1px solid #E2E8F0;
+          border-radius: 6px;
+          padding: 2px 8px;
+          color: #334155;
+        }
+
+        .low-stock-qty {
+          font-weight: 600;
+        }
+
+        .row-actions {
+          display: flex;
+          gap: 2px;
+          justify-content: flex-end;
+          opacity: 0;
+          pointer-events: none;
+          transition: opacity 150ms ease;
+        }
+        .data-row:hover .row-actions {
+          opacity: 1;
+          pointer-events: auto;
+        }
+
+        .btn-icon {
+          padding: 4px 8px;
+          border-radius: 6px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          transition: all 150ms ease;
+        }
+        .btn-icon-edit { color: #64748B; }
+        .btn-icon-edit:hover { background: #F1F5F9; }
+        .btn-icon-delete { color: #94A3B8; }
+        .btn-icon-delete:hover { background: #FEF2F2; color: #EF4444; }
+
+        [data-theme="dark"] .card-metric {
+          background: #1E293B;
+          border-color: #334155;
+        }
+        [data-theme="dark"] .metric-value { color: #F1F5F9; }
+        [data-theme="dark"] .input-field {
+          background: #1E293B;
+          border-color: #334155;
+          color: #F1F5F9;
+        }
+        [data-theme="dark"] .input-field::placeholder { color: #64748B; }
+        [data-theme="dark"] .data-th {
+          background: #1E293B;
+          color: #64748B;
+          border-bottom-color: #334155;
+        }
+        [data-theme="dark"] .data-td {
+          color: #F1F5F9;
+          border-bottom-color: #1E293B;
+        }
+        [data-theme="dark"] .data-row:hover { background: #263044; }
+        [data-theme="dark"] .sku-chip {
+          background: #0F172A;
+          border-color: #334155;
+          color: #F1F5F9;
+        }
+        [data-theme="dark"] .btn-icon-edit { color: #94A3B8; }
+        [data-theme="dark"] .btn-icon-edit:hover { background: #263044; }
+        [data-theme="dark"] .btn-icon-delete { color: #64748B; }
+        [data-theme="dark"] .btn-icon-delete:hover { background: #3B1C1C; color: #EF4444; }
+        [data-theme="dark"] .btn-primary:hover:not(:disabled) {
+          box-shadow: 0 4px 14px rgba(79,70,229,0.6);
+        }
+        [data-theme="dark"] .low-stock-qty { color: #D97706 !important; }
+        [data-theme="dark"] [style*="background: repeating-linear-gradient"] {
+          background: repeating-linear-gradient(45deg, #0F172A, #0F172A 12px, #131C31 12px, #131C31 13px), linear-gradient(to bottom, #0F172A, #0B1222) !important;
+        }
+        [data-theme="dark"] [style*="color: #0F172A"] { color: #F1F5F9 !important; }
+        [data-theme="dark"] h1 { color: #F1F5F9 !important; }
+        [data-theme="dark"] h2 { color: #F1F5F9 !important; }
+        [data-theme="dark"] .rounded-xl.border {
+          background: #1E293B;
+          border-color: #334155;
+        }
+        [data-theme="dark"] .dot-pulse { background-color: #10B981 !important; }
+      `}</style>
     </div>
   );
 }
